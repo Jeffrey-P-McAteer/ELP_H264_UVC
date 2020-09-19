@@ -397,8 +397,8 @@ struct uvc_stats_frame {
 };
 
 struct uvc_stats_stream {
-	struct timespec start_ts;	/* Stream start timestamp */
-	struct timespec stop_ts;	/* Stream stop timestamp */
+	struct timespec64 start_ts;	/* Stream start timestamp */
+	struct timespec64 stop_ts;	/* Stream stop timestamp */
 
 	unsigned int nb_frames;		/* Number of frames */
 
@@ -479,7 +479,7 @@ struct uvc_streaming {
 		struct uvc_clock_sample {
 			u32 dev_stc;
 			u16 dev_sof;
-			struct timespec host_ts;
+			struct timespec64 host_ts;
 			u16 host_sof;
 		} *samples;
 
