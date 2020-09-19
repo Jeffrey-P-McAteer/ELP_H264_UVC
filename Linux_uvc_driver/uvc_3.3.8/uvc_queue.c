@@ -56,9 +56,11 @@ static inline struct uvc_buffer *uvc_vbuf_to_buffer(struct vb2_v4l2_buffer *buf)
 }
 /******************************************************************************/
 
-static int uvc_queue_setup(struct vb2_queue *vq, const struct v4l2_format *fmt,
+// See https://www.kernel.org/doc/html/v5.0/media/kapi/v4l2-videobuf2.html?highlight=queue_setup
+// int (*queue_setup)(struct vb2_queue *q,unsigned int *num_buffers, unsigned int *num_planes, unsigned int sizes[], struct device *alloc_devs[]);
+static int uvc_queue_setup(struct vb2_queue *vq, 
 			   unsigned int *nbuffers, unsigned int *nplanes,
-			   unsigned int sizes[], void *alloc_ctxs[])
+			   unsigned int sizes[], struct device *alloc_ctxs[])
 {
 	struct uvc_video_queue *queue = vb2_get_drv_priv(vq);
 	struct uvc_streaming *stream =
@@ -177,7 +179,7 @@ static void uvc_buffer_finish(struct vb2_buffer *vb)
 }
 */
 //modify by Pae
-static int uvc_buffer_finish(struct vb2_buffer *vb)
+static void uvc_buffer_finish(struct vb2_buffer *vb)
 {
 	struct vb2_v4l2_buffer *vbuf = to_vb2_v4l2_buffer(vb);
 	struct uvc_video_queue *queue = vb2_get_drv_priv(vb->vb2_queue);
@@ -185,8 +187,8 @@ static int uvc_buffer_finish(struct vb2_buffer *vb)
 			container_of(queue, struct uvc_streaming, queue);
 	struct uvc_buffer *buf = container_of(vb, struct uvc_buffer, buf);
 
-	uvc_video_clock_update(stream, vbuf, buf);
-	return 0;
+	uvc_video_clock_update(stream, (struct v4l2_buffer *) vbuf, buf);
+	
 }
 
 static struct vb2_ops uvc_queue_qops = {
@@ -252,7 +254,7 @@ int uvc_queue_buffer(struct uvc_video_queue *queue, struct v4l2_buffer *buf)
 	int ret;
 
 	mutex_lock(&queue->mutex);
-	ret = vb2_qbuf(&queue->queue, buf);
+	ret = vb2_qbuf(&queue->queue, NULL, buf);
 	mutex_unlock(&queue->mutex);
 
 	return ret;
